@@ -44,6 +44,7 @@ import java.util.Enumeration;
 import java.util.List;
 
 import amiin.bazouk.application.com.demo_bytes_android.hotspot.MyOreoWifiManager;
+import amiin.bazouk.application.com.demo_bytes_android.iota.ApplyTransaction;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -609,6 +610,14 @@ public class MainActivity extends PermissionsActivity {
                 ((Button)findViewById(R.id.sell_button)).setText(getResources().getString(R.string.stop_selling));
             }
         });
+        String protocol = "https";
+        String host = "nodes.devnet.iota.org";
+        String port = "443";
+        int minWeightMagnitude = 9;
+        String explorerHost = "https://devnet.thetangle.org";
+        String senderSeed = "XDETDPOUHPRFA9GBTNTPSYWPZVHVSJQP9DZHF9YMOLPIDHYMHHNMDJLQZM9KGMZAZSUQQ9JWRBWYJLZPU";
+        String addressTo = "IETGETEQSAAJUCCKDVBBGPUNQVUFNTHNMZYUCXXBFXYOOOQOHC9PTMP9RRIMIOQRDPATHPVQXBRXIKFDDRDPQDBWTY";
+        new ApplyTransaction(protocol,host,port,minWeightMagnitude, explorerHost,senderSeed,addressTo).applyTransaction();
         checkIfConnectedToWifi();
     }
 
