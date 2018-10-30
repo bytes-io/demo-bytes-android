@@ -15,16 +15,14 @@ public class ApplyTransaction {
     private String port;
     private int minWeightMagnitude;
     private String explorerHost;
-    private String senderSeed;
     private String addressTo;
 
-    public ApplyTransaction(String protocol,String host,String port,int minWeightMagnitude, String explorerHost,String senderSeed,String addressTo){
+    public ApplyTransaction(String protocol,String host,String port,int minWeightMagnitude, String explorerHost,String addressTo){
         this.protocol = protocol;
         this.host = host;
         this.port = port;
         this.minWeightMagnitude = minWeightMagnitude;
         this.explorerHost = explorerHost;
-        this.senderSeed = senderSeed;
         this.addressTo = addressTo;
     }
     // mainnet
@@ -39,18 +37,20 @@ public class ApplyTransaction {
         iota.minWeightMagnitude = minWeightMagnitude;
 
 
-        List<Transfer> transfers = new ArrayList<Transfer>();
-        transfers.add(new Transfer(addressTo, 0));
+        String addressTo = "IETGETEQSAAJUCCKDVBBGPUNQVUFNTHNMZYUCXXBFXYOOOQOHC9PTMP9RRIMIOQRDPATHPVQXBRXIKFDDRDPQDBWTY";
+        long amountIni = 1;
 
         try {
-            List<Transaction> transctions = iota.makeTx(senderSeed, transfers);
+            List<String> tails = iota.makeTx(addressTo, amountIni);
 
-            System.out.println(transctions);
-            System.out.println("\n\n see it here " + explorerHost + "/transaction/" + transctions.get(0).getHash() + " \n\n" );
+            System.out.println(tails);
+            System.out.println("\n\n see it here " + explorerHost + "/transaction/" + tails.get(0) + " \n\n" );
 
         } catch(Throwable e) {
             System.err.println("\nERROR: Something went wrong: " + e.getMessage());
             e.printStackTrace();
         }
+
+
     }
 }

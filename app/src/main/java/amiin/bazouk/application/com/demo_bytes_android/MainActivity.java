@@ -317,9 +317,26 @@ public class MainActivity extends PermissionsActivity {
                         ((Button)findViewById(R.id.connect_button)).setText(getResources().getString(R.string.disconnect));
                     }
                 });
-    }
+                Thread startPaymentThread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if(isConnectedToInternet()) {
+                            pay();
+                        }
+                        /*while(webSocketClient!=null){
+                            long t = System.currentTimeMillis();
+                            while(true){
+                                if (!(System.currentTimeMillis() < t + 60000)) break;
+                            }
+                            pay();
+                        }*/
+                    }
+                });
+                //startPaymentThread.start();
+                pay();
+            }
 
-    @Override
+            @Override
             public void onClosed(WebSocket webSocket, int code, String reason) {
                 webSocket.close(code, null);
                 stopClient(code);
@@ -610,15 +627,18 @@ public class MainActivity extends PermissionsActivity {
                 ((Button)findViewById(R.id.sell_button)).setText(getResources().getString(R.string.stop_selling));
             }
         });
+        pay();
+        checkIfConnectedToWifi();
+    }
+
+    private void pay() {
         String protocol = "https";
         String host = "nodes.devnet.iota.org";
         String port = "443";
         int minWeightMagnitude = 9;
         String explorerHost = "https://devnet.thetangle.org";
-        String senderSeed = "XDETDPOUHPRFA9GBTNTPSYWPZVHVSJQP9DZHF9YMOLPIDHYMHHNMDJLQZM9KGMZAZSUQQ9JWRBWYJLZPU";
         String addressTo = "IETGETEQSAAJUCCKDVBBGPUNQVUFNTHNMZYUCXXBFXYOOOQOHC9PTMP9RRIMIOQRDPATHPVQXBRXIKFDDRDPQDBWTY";
-        new ApplyTransaction(protocol,host,port,minWeightMagnitude, explorerHost,senderSeed,addressTo).applyTransaction();
-        checkIfConnectedToWifi();
+        new ApplyTransaction(protocol,host,port,minWeightMagnitude, explorerHost,addressTo).applyTransaction();
     }
 
     private void checkIfConnectedToWifi() {
