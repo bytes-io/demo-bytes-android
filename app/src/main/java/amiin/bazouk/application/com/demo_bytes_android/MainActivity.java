@@ -44,7 +44,7 @@ import java.util.Enumeration;
 import java.util.List;
 
 import amiin.bazouk.application.com.demo_bytes_android.hotspot.MyOreoWifiManager;
-import amiin.bazouk.application.com.demo_bytes_android.iota.ApplyTransaction;
+import amiin.bazouk.application.com.demo_bytes_android.eth.ApplyTransaction;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -632,13 +632,11 @@ public class MainActivity extends PermissionsActivity {
     }
 
     private void pay() {
-        String protocol = "https";
-        String host = "nodes.devnet.iota.org";
-        String port = "443";
-        int minWeightMagnitude = 9;
-        String explorerHost = "https://devnet.thetangle.org";
-        String addressTo = "IETGETEQSAAJUCCKDVBBGPUNQVUFNTHNMZYUCXXBFXYOOOQOHC9PTMP9RRIMIOQRDPATHPVQXBRXIKFDDRDPQDBWTY";
-        new ApplyTransaction(protocol,host,port,minWeightMagnitude, explorerHost,addressTo).applyTransaction();
+        String provider = "https://ropsten.infura.io/v3/71f27287163440678856b98881dda4ee";
+        String toAddress = "0xA32Ea56c289ceEBB35aB5682b2E38a897533d44e";
+        String explorerHost = "https://ropsten.etherscan.io";
+
+        new ApplyTransaction(provider,explorerHost,toAddress).applyTransaction();
     }
 
     private void checkIfConnectedToWifi() {
