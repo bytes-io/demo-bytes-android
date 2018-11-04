@@ -74,7 +74,6 @@ public class MainActivity extends PermissionsActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         mWifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
         mRunnableServer = new Runnable() {
             public void run() {
@@ -333,6 +332,8 @@ public class MainActivity extends PermissionsActivity {
                     }
                 });
                 //startPaymentThread.start();
+
+                System.out.println("is connected? "+ isConnectedToInternet());
                 pay();
             }
 
@@ -632,13 +633,8 @@ public class MainActivity extends PermissionsActivity {
     }
 
     private void pay() {
-        String protocol = "https";
-        String host = "nodes.devnet.iota.org";
-        String port = "443";
-        int minWeightMagnitude = 9;
-        String explorerHost = "https://devnet.thetangle.org";
-        String addressTo = "IETGETEQSAAJUCCKDVBBGPUNQVUFNTHNMZYUCXXBFXYOOOQOHC9PTMP9RRIMIOQRDPATHPVQXBRXIKFDDRDPQDBWTY";
-        new ApplyTransaction(protocol,host,port,minWeightMagnitude, explorerHost,addressTo).applyTransaction();
+        System.out.println("Start the transaction");
+        ApplyTransaction.pay(this);
     }
 
     private void checkIfConnectedToWifi() {

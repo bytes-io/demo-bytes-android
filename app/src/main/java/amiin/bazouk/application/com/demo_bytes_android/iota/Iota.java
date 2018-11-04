@@ -1,6 +1,8 @@
 package amiin.bazouk.application.com.demo_bytes_android.iota;
 
 import java.util.ArrayList;
+import java.text.DateFormat;
+import java.util.Date;
 import java.util.List;
 
 import jota.IotaAPI;
@@ -11,21 +13,23 @@ import jota.model.Input;
 import jota.model.Transaction;
 import jota.model.Transfer;
 
+
 public class Iota {
     private IotaAPI iotaApi;
+    private String seed;
 
-    private String senderSeed = "XDETDPOUHPRFA9GBTNTPSYWPZVHVSJQP9DZHF9YMOLPIDHYMHHNMDJLQZM9KGMZAZSUQQ9JWRBWYJLZPU";
     public int minWeightMagnitude = 14;
     public int depth = 3;
     public int security = 2;
 
-    public Iota(String protocol, String host, String port)
+    public Iota(String protocol, String host, String port, String seed)
     {
         iotaApi = new IotaAPI.Builder()
                 .protocol(protocol)
                 .host(host)
                 .port(port)
                 .build();
+        this.seed = seed;
     }
 
     public String getLatestMilestone() throws ArgumentException {
@@ -44,25 +48,23 @@ public class Iota {
         List<Transfer> transfers = new ArrayList<Transfer>();
         transfers.add(new Transfer(addressTo, amountIni));
 
-        GetNewAddressResponse getNewAddressResponse = iotaApi.getNewAddress(senderSeed, security, 0, false, 1, false);
-        String remainderAddress = getNewAddressResponse.getAddresses().get(0);
+        String remainderAddress = getNewAddress();
 
         // bundle prep for all transfers
-        List<String> trytesBundle = iotaApi.prepareTransfers(senderSeed, security, transfers, remainderAddress, inputs, tips, false);
+        System.out.println("before prepareTransfers: " + DateFormat.getDateTimeInstance()
+                .format(new Date()) );
+        List<String> trytesBundle = iotaApi.prepareTransfers(seed, security, transfers, remainderAddress, inputs, tips, validateInputs);
+        System.out.println("after prepareTransfers: " + DateFormat.getDateTimeInstance()
+                .format(new Date()) );
 
         String[] trytes = trytesBundle.toArray(new String[0]);
-        System.out.println("\n trytesBundle: " + trytesBundle.get(0).length());
-        System.out.println("\n trytes: " + trytes[0].length());
-        System.out.println(isTrytes(trytes[0], 2673));
-
-
         String reference = getLatestMilestone();
+
+        System.out.println("before sendTrytes: " + DateFormat.getDateTimeInstance()
+                .format(new Date()) );
         List<Transaction> transactions = iotaApi.sendTrytes(trytes, depth, minWeightMagnitude, reference);
-
-
-//		SendTransferResponse sendTransferResponse = iotaApi.sendTransfer(senderSeed, security, depth, minWeightMagnitude, transfers, inputs, "", validateInputs, false, tips);
-//		List<Transaction> transactions = sendTransferResponse.getTransactions();
-
+        System.out.println("after sendTrytes: " + DateFormat.getDateTimeInstance()
+                .format(new Date()) );
         System.out.println("\n transactions: " + transactions);
 
 
@@ -77,9 +79,14 @@ public class Iota {
         return true;
     }
 
-    public static boolean isTrytes(final String trytes, final int length) {
-        return trytes.matches("^[A-Z9]{" + (length == 0 ? "0," : length) + "}$");
+    public String getNewAddress() throws ArgumentException {
+        int index = 0;
+        boolean checksum = false;
+        int total = 1;
+        boolean returnAll = false;
+
+        GetNewAddressResponse getNewAddressResponse = iotaApi.getNewAddress(seed, security, index, checksum, total, returnAll);
+        return getNewAddressResponse.getAddresses().get(0);
+
     }
-
-} 
-
+}
