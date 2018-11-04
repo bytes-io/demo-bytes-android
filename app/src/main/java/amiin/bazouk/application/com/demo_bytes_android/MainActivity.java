@@ -1,10 +1,14 @@
 package amiin.bazouk.application.com.demo_bytes_android;
 
 import android.Manifest;
+import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.app.usage.NetworkStats;
 import android.app.usage.NetworkStatsManager;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -32,6 +36,8 @@ import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.ConnectException;
 import java.net.InetAddress;
@@ -43,7 +49,10 @@ import java.util.Calendar;
 import java.util.Enumeration;
 import java.util.List;
 
+import amiin.bazouk.application.com.demo_bytes_android.bluetooth.BluetoothThreadClient;
+import amiin.bazouk.application.com.demo_bytes_android.bluetooth.BluetoothThreadServer;
 import amiin.bazouk.application.com.demo_bytes_android.hotspot.MyOreoWifiManager;
+import me.aflak.bluetooth.Bluetooth;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -68,6 +77,7 @@ public class MainActivity extends PermissionsActivity {
     private List<ScanResult> wifiList = new ArrayList<>();
     private WifiManager mWifiManager;
     private BroadcastReceiver mWifiScanReceiver = null;
+    private BluetoothThreadClient bluetoothThreadClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -275,6 +285,25 @@ public class MainActivity extends PermissionsActivity {
     }
 
     private void startClient() {
+
+        BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        mBluetoothAdapter.enable();
+        if(!mBluetoothAdapter.isEnabled()){
+            return;
+        }
+        getPasswordThroughBluetooth(mBluetoothAdapter);
+        long time = System.currentTimeMillis();
+        while(true) {
+            if (System.currentTimeMillis() > time + 90000)
+            {
+                return;
+            }
+            if(bluetoothThreadClient!=null && bluetoothThreadClient.getPassword()!=null) {
+                System.out.println("The password is :"+bluetoothThreadClient.getPassword());
+                break;
+            }
+
+        }
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, PERMISSION_ACCESS_COARSE_LOCATION_CODE);
@@ -289,6 +318,57 @@ public class MainActivity extends PermissionsActivity {
         if(connectToHotspot()) {
             connectToServer();
         }
+    }
+
+    private void getPasswordThroughBluetooth(final BluetoothAdapter bluetoothAdapter) {
+        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+        filter.addAction(BluetoothDevice.ACTION_PAIRING_REQUEST);
+        filter.addAction(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
+        final BroadcastReceiver mReceiver = new BroadcastReceiver() {
+            public void onReceive(Context context, Intent intent) {
+                String action = intent.getAction();
+                if (BluetoothDevice.ACTION_FOUND.equals(action)) {
+                    BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && device.getName()!=null && device.getName().length()>=6 && device.getName().substring(0,6).equals("bytes-")) {
+                        bluetoothThreadClient = new BluetoothThreadClient(device,bluetoothAdapter);
+                        bluetoothThreadClient.start();
+                        //Bluetooth bluetooth = new Bluetooth(MainActivity.this);
+                        //bluetooth.pair(device);
+                        //device.createBond();
+                        //int pin=intent.getIntExtra("android.bluetooth.device.extra.PAIRING_KEY", 0);
+                        //byte[] pinBytes;
+                        //try {
+                        //    pinBytes = (""+pin).getBytes("UTF-8");
+                        //    device.setPin(pinBytes);
+                        //} catch (UnsupportedEncodingException e) {
+                        //    e.printStackTrace();
+                        //}
+                        //device.setPairingConfirmation(true);
+                    }
+                }
+                if( BluetoothDevice.ACTION_PAIRING_REQUEST.equals(action)) {
+                    BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                        int pin=intent.getIntExtra("android.bluetooth.device.extra.PAIRING_KEY", 0);
+                        byte[] pinBytes;
+                        try {
+                            pinBytes = (""+pin).getBytes("UTF-8");
+                            device.setPin(pinBytes);
+                        } catch (UnsupportedEncodingException e) {
+                            e.printStackTrace();
+                        }
+                        device.setPairingConfirmation(true);
+                    }
+                }
+                /*if( BluetoothDevice.ACTION_BOND_STATE_CHANGED.equals(action)) {
+
+                    }
+                }*/
+
+            }
+        };
+        registerReceiver(mReceiver, filter);
+        bluetoothAdapter.startDiscovery();
     }
 
     private void connectToServer() {
@@ -316,9 +396,9 @@ public class MainActivity extends PermissionsActivity {
                         ((Button)findViewById(R.id.connect_button)).setText(getResources().getString(R.string.disconnect));
                     }
                 });
-    }
+            }
 
-    @Override
+            @Override
             public void onClosed(WebSocket webSocket, int code, String reason) {
                 webSocket.close(code, null);
                 stopClient(code);
@@ -610,6 +690,57 @@ public class MainActivity extends PermissionsActivity {
             }
         });
         checkIfConnectedToWifi();
+
+        BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        mBluetoothAdapter.enable();
+        ensureDiscoverable();
+        //acceptPairing();
+        if(mBluetoothAdapter.isEnabled()) {
+            new BluetoothThreadServer(mBluetoothAdapter).start();
+        }
+    }
+
+    private void acceptPairing() {
+        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_PAIRING_REQUEST);
+        filter.addAction(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
+        final BroadcastReceiver mReceiver = new BroadcastReceiver() {
+            public void onReceive(Context context, Intent intent) {
+                String action = intent.getAction();
+                if( BluetoothDevice.ACTION_PAIRING_REQUEST.equals(action)) {
+                    BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                        int pin=intent.getIntExtra("android.bluetooth.device.extra.PAIRING_KEY", 0);
+                        byte[] pinBytes;
+                        try {
+                            pinBytes = (""+pin).getBytes("UTF-8");
+                            device.setPin(pinBytes);
+                        } catch (UnsupportedEncodingException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+                /*if( BluetoothDevice.ACTION_BOND_STATE_CHANGED.equals(action)) {
+                    BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && device.getBondState() == BluetoothDevice.BOND_BONDING) {
+                       if(!hasWindowFocus()){
+                           View v = getCurrentFocus();
+                           int a = 0;
+                       }
+                       else{
+                           View v = getCurrentFocus();
+                           int a = 0;
+                        }
+                    }
+                }*/
+            }
+        };
+        registerReceiver(mReceiver, filter);
+    }
+
+    private void ensureDiscoverable() {
+            Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
+            discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 800);
+            startActivity(discoverableIntent);
     }
 
     private void checkIfConnectedToWifi() {
