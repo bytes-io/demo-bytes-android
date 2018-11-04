@@ -1,47 +1,38 @@
 package amiin.bazouk.application.com.demo_bytes_android.iota;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.text.DateFormat;
+import java.util.Date;
 
-import jota.error.ArgumentException;
-import jota.model.Transaction;
-import jota.model.Transfer;
+import android.content.Context;
+import amiin.bazouk.application.com.demo_bytes_android.R;
 
 public class ApplyTransaction {
+    private static Iota iota = null;
 
-    // devnet
-    private String protocol;
-    private String host;
-    private String port;
-    private int minWeightMagnitude;
-    private String explorerHost;
-    private String addressTo;
+    private static String protocol;
+    private static String host;
+    private static String port;
+    private static int minWeightMagnitude;
+    private static String explorerHost;
+    private static String toAddress;
+    private static String senderSeed;
 
-    public ApplyTransaction(String protocol,String host,String port,int minWeightMagnitude, String explorerHost,String addressTo){
-        this.protocol = protocol;
-        this.host = host;
-        this.port = port;
-        this.minWeightMagnitude = minWeightMagnitude;
-        this.explorerHost = explorerHost;
-        this.addressTo = addressTo;
-    }
-    // mainnet
-		/*String protocol = "http";
-		String host = "node02.iotatoken.nl";
-		String port = "14265";
-		int minWeightMagnitude = 14;
-		String explorerHost = "https://thetangle.org";*/
+    public static void pay(Context context){
 
-    public void applyTransaction(){
-        Iota iota = new Iota(protocol, host, port);
-        iota.minWeightMagnitude = minWeightMagnitude;
+        if (iota == null) {
+            iota = createIota(context);
+        }
 
 
-        String addressTo = "IETGETEQSAAJUCCKDVBBGPUNQVUFNTHNMZYUCXXBFXYOOOQOHC9PTMP9RRIMIOQRDPATHPVQXBRXIKFDDRDPQDBWTY";
         long amountIni = 1;
 
         try {
-            List<String> tails = iota.makeTx(addressTo, amountIni);
+            System.out.println("before makeTx: " + DateFormat.getDateTimeInstance()
+                    .format(new Date()) );
+            List<String> tails = iota.makeTx(toAddress, amountIni);
+            System.out.println("after makeTx: " + DateFormat.getDateTimeInstance()
+                    .format(new Date()) );
 
             System.out.println(tails);
             System.out.println("\n\n see it here " + explorerHost + "/transaction/" + tails.get(0) + " \n\n" );
@@ -51,6 +42,38 @@ public class ApplyTransaction {
             e.printStackTrace();
         }
 
+    }
 
+    private static Iota createIota(Context context) {
+        String network = context.getResources().getString(R.string.network);
+
+        if (network.equals("mainnet")) {
+
+            protocol = context.getResources().getString(R.string.mainnet_protocol);
+            host = context.getResources().getString(R.string.mainnet_host);
+            port = context.getResources().getString(R.string.mainnet_port);
+            minWeightMagnitude = context.getResources().getInteger(R.integer.mainnet_min_weight_magnitude);
+            explorerHost = context.getResources().getString(R.string.mainnet_explorer_host);
+            toAddress = context.getResources().getString(R.string.mainnet_to_address);
+            senderSeed = context.getResources().getString(R.string.mainnet_sender_seed);
+        } else {
+
+            protocol = context.getResources().getString(R.string.testnet_protocol);
+            host = context.getResources().getString(R.string.testnet_host);
+            port = context.getResources().getString(R.string.testnet_port);
+            minWeightMagnitude = context.getResources().getInteger(R.integer.testnet_min_weight_magnitude);
+            explorerHost = context.getResources().getString(R.string.testnet_explorer_host);
+            toAddress = context.getResources().getString(R.string.testnet_to_address);
+            senderSeed = context.getResources().getString(R.string.testnet_sender_seed);
+        }
+
+        System.out.println("new IOTA [start]: " + DateFormat.getDateTimeInstance()
+                .format(new Date()));
+        Iota iota = new Iota(protocol, host, port, senderSeed);
+        System.out.println("new IOTA [done]: " + DateFormat.getDateTimeInstance()
+                .format(new Date()) );
+
+        iota.minWeightMagnitude = minWeightMagnitude;
+        return iota;
     }
 }
