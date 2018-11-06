@@ -46,6 +46,12 @@ public class ApplyTransaction {
 
     }
 
+    public static double getPriceUSD() throws IOException, ParseException {
+        double tickerPrice = price.get("IOT");
+        System.out.println(tickerPrice);
+        return tickerPrice;
+    }
+
     public static double getBalanceUSD() throws IOException, ParseException {
 
         long currentBalance = 1;
