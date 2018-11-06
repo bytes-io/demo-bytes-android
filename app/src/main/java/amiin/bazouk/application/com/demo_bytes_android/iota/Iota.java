@@ -2,16 +2,19 @@ package amiin.bazouk.application.com.demo_bytes_android.iota;
 
 import java.util.ArrayList;
 import java.text.DateFormat;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
 import jota.IotaAPI;
+import jota.dto.response.GetBalancesAndFormatResponse;
 import jota.dto.response.GetNewAddressResponse;
 import jota.dto.response.GetNodeInfoResponse;
 import jota.error.ArgumentException;
 import jota.model.Input;
 import jota.model.Transaction;
 import jota.model.Transfer;
+import jota.utils.StopWatch;
 
 
 public class Iota {
@@ -79,6 +82,28 @@ public class Iota {
         return true;
     }
 
+    public String getCurrentAddress() {
+        return "";
+    }
+
+    public long getBalance() throws ArgumentException {
+        String currentAddress = this.getCurrentAddress();
+        List<String> tips = new ArrayList<String>();
+        long threshold = 0;
+        int start = 0; //currentAddressIndex
+        StopWatch stopWatch = new StopWatch();
+
+
+        GetBalancesAndFormatResponse res = iotaApi.getBalanceAndFormat(
+                Arrays.asList(currentAddress),
+                tips,
+                threshold,
+                start,
+                stopWatch,
+                security);
+        return res.getTotalBalance();
+    }
+
     public String getNewAddress() throws ArgumentException {
         int index = 0;
         boolean checksum = false;
@@ -87,6 +112,5 @@ public class Iota {
 
         GetNewAddressResponse getNewAddressResponse = iotaApi.getNewAddress(seed, security, index, checksum, total, returnAll);
         return getNewAddressResponse.getAddresses().get(0);
-
     }
 }

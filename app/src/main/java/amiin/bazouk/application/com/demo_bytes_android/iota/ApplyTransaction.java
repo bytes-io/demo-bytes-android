@@ -1,11 +1,13 @@
 package amiin.bazouk.application.com.demo_bytes_android.iota;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.text.DateFormat;
 import java.util.Date;
 
 import android.content.Context;
 import amiin.bazouk.application.com.demo_bytes_android.R;
+import jota.model.Input;
 
 public class ApplyTransaction {
     private static Iota iota = null;
@@ -18,15 +20,13 @@ public class ApplyTransaction {
     private static String toAddress;
     private static String senderSeed;
 
-    public static void pay(Context context){
+    public static void pay(Context context) {
 
         if (iota == null) {
             iota = createIota(context);
         }
 
-
         long amountIni = 1;
-
         try {
             System.out.println("before makeTx: " + DateFormat.getDateTimeInstance()
                     .format(new Date()) );
@@ -42,6 +42,45 @@ public class ApplyTransaction {
             e.printStackTrace();
         }
 
+    }
+
+    public static String getCurrentAddress(Context context) {
+
+        if (iota == null) {
+            iota = createIota(context);
+        }
+
+        return iota.getCurrentAddress();
+    }
+
+    public static ResponseGetBalance getBalance(Context context) {
+
+        if (iota == null) {
+            iota = createIota(context);
+        }
+
+        long balanceInI = iota.getBalance();
+        double balanceInUsd = balanceInI * 0.5;
+        return new ResponseGetBalance(balanceInI, balanceInUsd);
+    }
+
+    public static ResponsePayOut payOut(Context context, String payOutAddress, long amountIni) {
+
+        if (iota == null) {
+            iota = createIota(context);
+        }
+
+        List<String> tails = new ArrayList<String>();
+        try {
+            tails = iota.makeTx(payOutAddress, amountIni);
+        } catch(Throwable e) {
+            System.err.println("\nERROR: Something went wrong: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        String hash = tails.get(0);
+        String link = explorerHost + "/transaction/" + tails.get(0);
+        return new ResponsePayOut(hash, link);
     }
 
     private static Iota createIota(Context context) {
@@ -77,3 +116,4 @@ public class ApplyTransaction {
         return iota;
     }
 }
+
