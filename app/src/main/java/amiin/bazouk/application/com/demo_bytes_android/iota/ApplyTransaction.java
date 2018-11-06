@@ -1,10 +1,14 @@
 package amiin.bazouk.application.com.demo_bytes_android.iota;
 
+import java.io.IOException;
 import java.util.List;
 import java.text.DateFormat;
 import java.util.Date;
 
 import android.content.Context;
+
+import org.json.simple.parser.ParseException;
+
 import amiin.bazouk.application.com.demo_bytes_android.R;
 
 public class ApplyTransaction {
@@ -39,6 +43,13 @@ public class ApplyTransaction {
             e.printStackTrace();
         }
 
+    }
+
+    public static double getPriceUSD() throws IOException, ParseException {
+        Prices price = new Prices();
+        double tickerPrice = price.get("IOT");
+        System.out.println(tickerPrice);
+        return tickerPrice;
     }
 
     private static Iota createIota(Context context) {
