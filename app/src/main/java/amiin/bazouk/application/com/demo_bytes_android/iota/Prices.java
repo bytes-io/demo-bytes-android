@@ -26,7 +26,6 @@ public class Prices {
 
         Object obj = parser.parse(jsonData);
         JSONArray jsonArray = (JSONArray) obj;
-//            System.out.println(jsonArray.get(0));
 
         JSONObject tickerObj = (JSONObject) jsonArray.get(0);
 

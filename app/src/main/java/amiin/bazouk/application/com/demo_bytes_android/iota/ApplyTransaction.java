@@ -13,6 +13,7 @@ import amiin.bazouk.application.com.demo_bytes_android.R;
 
 public class ApplyTransaction {
     private static Iota iota = null;
+    private static Prices price = new Prices();
 
     private static String protocol;
     private static String host;
@@ -45,11 +46,12 @@ public class ApplyTransaction {
 
     }
 
-    public static double getPriceUSD() throws IOException, ParseException {
-        Prices price = new Prices();
+    public static double getBalanceUSD() throws IOException, ParseException {
+
+        long currentBalance = 1;
         double tickerPrice = price.get("IOT");
         System.out.println(tickerPrice);
-        return tickerPrice;
+        return currentBalance * tickerPrice;
     }
 
     private static Iota createIota(Context context) {
