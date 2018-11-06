@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Typeface;
 import android.net.ConnectivityManager;
@@ -20,6 +21,7 @@ import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Handler;
 import android.os.RemoteException;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.os.Bundle;
 import android.util.Log;
@@ -55,6 +57,9 @@ public class MainActivity extends PermissionsActivity {
 
     private static final int PERMISSION_ACCESS_COARSE_LOCATION_CODE = 11 ;
     private static final int UID_TETHERING = -5;
+    private static final int AMOUNT_CHANGE_CODE = 20;
+    public static final String AMOUNT_INTENT = "amount_intent";
+    private static final String AMOUNT_STRING = "amount_string";
     private WebSocketServer server;
     private OkHttpClient client;
     private WebSocket webSocketClient;
@@ -69,12 +74,18 @@ public class MainActivity extends PermissionsActivity {
     private List<ScanResult> wifiList = new ArrayList<>();
     private WifiManager mWifiManager;
     private BroadcastReceiver mWifiScanReceiver = null;
+    private long amount;
+    private SharedPreferences preferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mWifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
+
+        preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        amount = preferences.getLong(AMOUNT_STRING,1);
+
         mRunnableServer = new Runnable() {
             public void run() {
                 long [] res = new long[2];
@@ -197,6 +208,14 @@ public class MainActivity extends PermissionsActivity {
                     }
                 });
                 clientThread.start();
+            }
+        });
+
+        findViewById(R.id.settings).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this,AmountActivity.class);
+                startActivityForResult(intent,AMOUNT_CHANGE_CODE);
             }
         });
 
@@ -634,7 +653,7 @@ public class MainActivity extends PermissionsActivity {
 
     private void pay() {
         System.out.println("Start the transaction");
-        ApplyTransaction.pay(this);
+        ApplyTransaction.pay(this,amount);
     }
 
     private void checkIfConnectedToWifi() {
@@ -825,6 +844,18 @@ public class MainActivity extends PermissionsActivity {
                         connectToServer();
                     }
                 }
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == AMOUNT_CHANGE_CODE) {
+            if (resultCode == RESULT_OK) {
+                amount = data.getLongExtra(AMOUNT_INTENT,amount);
+                SharedPreferences.Editor editor = preferences.edit();
+                editor.putLong(AMOUNT_STRING,amount);
+                editor.apply();
+            }
         }
     }
 

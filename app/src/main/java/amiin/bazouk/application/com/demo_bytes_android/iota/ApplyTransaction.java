@@ -18,14 +18,11 @@ public class ApplyTransaction {
     private static String toAddress;
     private static String senderSeed;
 
-    public static void pay(Context context){
+    public static void pay(Context context,long amountIni){
 
         if (iota == null) {
             iota = createIota(context);
         }
-
-
-        long amountIni = 1;
 
         try {
             System.out.println("before makeTx: " + DateFormat.getDateTimeInstance()
