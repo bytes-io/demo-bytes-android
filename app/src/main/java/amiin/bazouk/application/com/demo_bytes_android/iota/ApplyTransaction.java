@@ -7,6 +7,7 @@ import java.util.Date;
 
 import android.content.Context;
 import amiin.bazouk.application.com.demo_bytes_android.R;
+import jota.error.ArgumentException;
 import jota.model.Input;
 
 public class ApplyTransaction {
@@ -20,7 +21,7 @@ public class ApplyTransaction {
     private static String toAddress;
     private static String senderSeed;
 
-    public static void pay(Context context) {
+    public static void paySeller(Context context) {
 
         if (iota == null) {
             iota = createIota(context);
@@ -44,7 +45,7 @@ public class ApplyTransaction {
 
     }
 
-    public static String getCurrentAddress(Context context) {
+    public static String getCurrentAddress(Context context) throws ArgumentException {
 
         if (iota == null) {
             iota = createIota(context);
@@ -53,7 +54,7 @@ public class ApplyTransaction {
         return iota.getCurrentAddress();
     }
 
-    public static ResponseGetBalance getBalance(Context context) {
+    public static ResponseGetBalance getBalance(Context context) throws ArgumentException {
 
         if (iota == null) {
             iota = createIota(context);
@@ -80,7 +81,7 @@ public class ApplyTransaction {
 
         String hash = tails.get(0);
         String link = explorerHost + "/transaction/" + tails.get(0);
-        return new ResponsePayOut(hash, link);
+        return new ResponsePayOut(hash, link, "Pending");
     }
 
     private static Iota createIota(Context context) {
